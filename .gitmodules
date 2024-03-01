@@ -1,0 +1,4 @@
+[submodule "Go2_ROS2_example/src/simple_apriltag"]
+	path = Go2_ROS2_example/src/simple_apriltag
+	url = https://github.com/TechShare-inc/simple_apriltag.git
+	branch = foxy_service

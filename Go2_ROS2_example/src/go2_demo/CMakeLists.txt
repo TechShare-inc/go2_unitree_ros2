@@ -30,6 +30,7 @@ set (
   rclcpp
   std_msgs
   rosbag2_cpp
+  apriltag_service
 )
 
 # find dependencies
@@ -39,6 +40,7 @@ find_package(unitree_api REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
+find_package(apriltag_service REQUIRED)
 
 add_executable(low_level_ctrl src/low_level_ctrl.cpp src/common/motor_crc.cpp)
 add_executable(read_low_state src/read_low_state.cpp)
@@ -49,6 +51,7 @@ add_executable(sport_mode_ctrl src/sport_mode_ctrl.cpp src/common/ros2_sport_cli
 add_executable(gait_type_devel src/devel/gait_type_devel.cpp src/common/ros2_sport_client.cpp)
 add_executable(move_rotate180 src/devel/move_rotate180.cpp src/common/ros2_sport_client.cpp)
 add_executable(main_rotation src/devel/main_rotation.cpp src/common/ros2_sport_client.cpp src/devel/sport_rotation.cpp)
+add_executable(tag_move_demo src/devel/tag_move_demo.cpp src/common/ros2_sport_client.cpp src/devel/sport_rotation.cpp)
 
 ament_target_dependencies(low_level_ctrl ${DEPENDENCY_LIST})
 ament_target_dependencies(read_low_state ${DEPENDENCY_LIST})
@@ -59,6 +62,7 @@ ament_target_dependencies(sport_mode_ctrl ${DEPENDENCY_LIST})
 ament_target_dependencies(gait_type_devel ${DEPENDENCY_LIST})
 ament_target_dependencies(move_rotate180 ${DEPENDENCY_LIST})
 ament_target_dependencies(main_rotation ${DEPENDENCY_LIST})
+ament_target_dependencies(tag_move_demo ${DEPENDENCY_LIST})
 
 
 install(TARGETS 
@@ -71,6 +75,7 @@ install(TARGETS
         gait_type_devel
         move_rotate180
         main_rotation
+        tag_move_demo
         DESTINATION lib/${PROJECT_NAME})
 
 
