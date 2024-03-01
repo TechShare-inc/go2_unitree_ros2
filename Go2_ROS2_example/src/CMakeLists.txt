@@ -16,7 +16,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 
-include_directories(include include/common include/nlohmann)
+include_directories(
+  include
+  include/common
+  include/nlohmann
+  include/devel)
 link_directories(src)
 
 set (
@@ -44,6 +48,7 @@ add_executable(record_bag src/record_bag.cpp)
 add_executable(sport_mode_ctrl src/sport_mode_ctrl.cpp src/common/ros2_sport_client.cpp)
 add_executable(gait_type_devel src/devel/gait_type_devel.cpp src/common/ros2_sport_client.cpp)
 add_executable(move_rotate180 src/devel/move_rotate180.cpp src/common/ros2_sport_client.cpp)
+add_executable(main_rotation src/devel/main_rotation.cpp src/common/ros2_sport_client.cpp src/devel/sport_rotation.cpp)
 
 ament_target_dependencies(low_level_ctrl ${DEPENDENCY_LIST})
 ament_target_dependencies(read_low_state ${DEPENDENCY_LIST})
@@ -53,6 +58,7 @@ ament_target_dependencies(record_bag ${DEPENDENCY_LIST})
 ament_target_dependencies(sport_mode_ctrl ${DEPENDENCY_LIST})
 ament_target_dependencies(gait_type_devel ${DEPENDENCY_LIST})
 ament_target_dependencies(move_rotate180 ${DEPENDENCY_LIST})
+ament_target_dependencies(main_rotation ${DEPENDENCY_LIST})
 
 
 install(TARGETS 
@@ -64,6 +70,7 @@ install(TARGETS
         sport_mode_ctrl
         gait_type_devel
         move_rotate180
+        main_rotation
         DESTINATION lib/${PROJECT_NAME})
 
 

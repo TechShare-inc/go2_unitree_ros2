@@ -8,13 +8,13 @@
 
 using namespace std::placeholders;
 
-class soprt_request : public rclcpp::Node
+class sport_request : public rclcpp::Node
 {
 public:
-    soprt_request() : Node("req_sender"), rotation_started(false), initial_yaw_set(false)
+    sport_request() : Node("req_sender"), rotation_started(false), initial_yaw_set(false)
     {
         state_suber = this->create_subscription<unitree_go::msg::SportModeState>(
-            "sportmodestate", 10, std::bind(&soprt_request::state_callback, this, _1));
+            "sportmodestate", 10, std::bind(&sport_request::state_callback, this, _1));
         req_puber = this->create_publisher<unitree_api::msg::Request>("/api/sport/request", 10);
     }
 
@@ -62,7 +62,7 @@ private:
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<soprt_request>();
+    auto node = std::make_shared<sport_request>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
