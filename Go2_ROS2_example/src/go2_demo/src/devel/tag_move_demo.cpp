@@ -1,10 +1,32 @@
 #include "rclcpp/rclcpp.hpp"
 #include "apriltag_service/srv/detect_apriltag.hpp"
-
 #include "sport_rotation.h"
 #include <thread>
+#include <chrono>
 
-using namespace std::chrono_literals; // この行を追加して、'1s' のような時間リテラルを使えるようにします。
+// タグ検出の処理を行う関数
+std::shared_ptr<apriltag_service::srv::DetectApriltag::Response> detect_apriltag(
+    const rclcpp::Node::SharedPtr& node,
+    const rclcpp::Client<apriltag_service::srv::DetectApriltag>::SharedPtr& client) {
+    auto request = std::make_shared<apriltag_service::srv::DetectApriltag::Request>();
+    request->tag_size = 0.162; // 例: 16.2cmのタグサイズ
+
+    auto future_result = client->async_send_request(request);
+    
+    if (rclcpp::spin_until_future_complete(node, future_result) == rclcpp::FutureReturnCode::SUCCESS) {
+        return future_result.get();
+    } else {
+        RCLCPP_ERROR(node->get_logger(), "Service call failed.");
+        return nullptr;
+    }
+}
+
+// 回転の処理を行う関数
+void perform_rotation(const std::shared_ptr<sport_rotation>& rotation) {
+    rotation->Start();
+    rotation->WaitForRotationToComplete();
+    std::cout << "180 degree rotation has completed." << std::endl;
+}
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
@@ -19,17 +41,9 @@ int main(int argc, char **argv) {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "サービスが利用可能になるのを待っています...");
     }
 
-    auto request = std::make_shared<apriltag_service::srv::DetectApriltag::Request>();
-    // tag_sizeをリクエストに設定します。具体的な値は、使用するタグのサイズによります。
-    request->tag_size = 0.162; // 例: 16.2cmのタグサイズ
-
-    auto future_result = client->async_send_request(request);
-
-    // レスポンスを待機
-    auto response = std::make_shared<apriltag_service::srv::DetectApriltag::Response>();
-    if (rclcpp::spin_until_future_complete(node, future_result) ==
-        rclcpp::FutureReturnCode::SUCCESS) {
-        response = future_result.get();
+    // service call
+    auto response = detect_apriltag(node, client);
+    if (response) {
         if (response->result == 0) {
             RCLCPP_INFO(node->get_logger(), "成功: AprilTag: ID %ld at [x: %f, y: %f, z: %f, rotation: %f]",
                         response->apriltag_id, response->x, response->y, response->z, response->rotation);
@@ -38,21 +52,15 @@ int main(int argc, char **argv) {
         } else if (response->result == 99) {
             RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "カメラエラー");
         }
-    } else {
-        RCLCPP_ERROR(node->get_logger(), "Service call failed.");
     }
 
-
+    // go2旋回
     auto rotation = std::make_shared<sport_rotation>(node);
     // spinを別スレッドで実行
     std::thread spin_thread([&]() { rclcpp::spin(node); });
 
-    if(response->apriltag_id == 303){
-        // 明示的に動作を開始する
-        rotation->Start();
-        // 180度回転が完了するまで待機
-        rotation->WaitForRotationToComplete();
-        std::cout << "180 degree rotation has completed." << std::endl;
+    if(response && response->apriltag_id == 303){
+        perform_rotation(rotation);
     }
 
     // spinスレッドが終了するのを待つ
