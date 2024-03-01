@@ -2,6 +2,10 @@
 #include <unistd.h>
 #include <cmath>
 
+#include <mutex>
+#include <atomic>
+#include <chrono>
+
 #include "rclcpp/rclcpp.hpp"
 #include "unitree_go/msg/sport_mode_state.hpp"
 
@@ -13,7 +17,7 @@ using std::placeholders::_1;
 class soprt_request : public rclcpp::Node
 {
 public:
-    soprt_request() : Node("req_sender")
+    soprt_request() : Node("req_sender"), new_gait_type_id(0), gait_change_requested(false)
     {
         // the state_suber is set to subscribe "sportmodestate" topic
         state_suber = this->create_subscription<unitree_go::msg::SportModeState>(
@@ -23,11 +27,71 @@ public:
         timer_ = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&soprt_request::timer_callback, this));
 
         t = -1; // Runing time count
+
+        // キーボード入力用のスレッドを開始
+        input_thread = std::thread(&soprt_request::keyboardInputThread, this);
     };
 
+    ~soprt_request() {
+        input_thread.join();
+    }
+    
 private:
+    std::thread input_thread;
+    std::mutex mutex;
+    int new_gait_type_id;
+    std::atomic<bool> gait_change_requested;
+    std::chrono::steady_clock::time_point last_gait_change_time;
+
+    void keyboardInputThread() {
+        while (rclcpp::ok()) {
+            std::string input;
+            std::cout << "Enter new gait type ID: ";
+            std::getline(std::cin, input);
+
+            int id;
+            try {
+                std::cout << "input: " << input << std::endl;
+                id = std::stoi(input);
+            } catch (...) {
+                std::cout << "Invalid input." << std::endl;
+                continue;
+            }
+
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                new_gait_type_id = id;
+            }
+            gait_change_requested = true;
+            last_gait_change_time = std::chrono::steady_clock::now();
+        }
+    }
+
     void timer_callback()
     {
+        unitree_api::msg::Request req;
+        
+        if (gait_change_requested) {
+            auto now = std::chrono::steady_clock::now();
+            auto gait_changing_time = std::chrono::duration_cast<std::chrono::seconds>(now - last_gait_change_time).count();
+            if (gait_changing_time < 1) {          
+                sport_req.Move(req, 0, 0, 0);
+            }
+            else if (gait_changing_time < 3){
+                std::lock_guard<std::mutex> lock(mutex);
+                sport_req.SwitchGait(req, new_gait_type_id);
+            } 
+            else {
+                gait_change_requested = false;
+            }
+
+            // Publish request messages
+            req_puber->publish(req);
+            std::cout << "req: " << req.parameter << std::endl;
+
+            return; // 3秒間一時停止
+        }
+
         t += dt;
         if (t > 0)
         {
@@ -61,6 +125,7 @@ private:
             }
             // Get request messages corresponding to high-level motion commands
             sport_req.TrajectoryFollow(req, path);
+
             // Publish request messages
             req_puber->publish(req);
         }
@@ -86,7 +151,7 @@ private:
     rclcpp::TimerBase::SharedPtr timer_; // ROS2 timer
     rclcpp::Publisher<unitree_api::msg::Request>::SharedPtr req_puber;
 
-    unitree_api::msg::Request req; // Unitree Go2 ROS2 request message
+    // unitree_api::msg::Request req; // Unitree Go2 ROS2 request message
     SportClient sport_req;
 
     double t; // runing time count

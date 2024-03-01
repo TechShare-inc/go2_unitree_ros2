@@ -1,0 +1,16 @@
+<package format="2">
+  <name>go2_python_test</name>
+  <version>0.0.0</version>
+  <description>Your package description</description>
+
+  <maintainer email="your_email@example.com">Your Name</maintainer>
+  <license>TODO: License declaration</license>
+
+  <depend>unitree_api</depend>
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+
+  <export>
+    <!-- Other export tags -->
+  </export>
+</package>
