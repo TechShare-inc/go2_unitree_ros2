@@ -11,9 +11,9 @@ class ImuPublisher : public rclcpp::Node {
 public:
     ImuPublisher()
     : Node("imu_publisher") {
-        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("imu/data", 10);
+        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/go2/imu", 10);
         state_sub_ = this->create_subscription<unitree_go::msg::SportModeState>(
-            "sport_mode_state", 10, std::bind(&ImuPublisher::stateCallback, this, std::placeholders::_1));
+            "sportmodestate", 10, std::bind(&ImuPublisher::stateCallback, this, std::placeholders::_1));
     }
 
 private:
