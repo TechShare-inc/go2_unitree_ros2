@@ -14,7 +14,7 @@
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>rosbag2_cpp</depend>
-  <depend>apriltag_service</depend>
+  <!-- <depend>apriltag_service</depend> -->
   <depend>sensor_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
