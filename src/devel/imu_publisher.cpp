@@ -22,10 +22,10 @@ private:
         imu_msg.header.stamp = this->get_clock()->now();
         imu_msg.header.frame_id = "imu_link";
 
-        imu_msg.orientation.x = data->imu_state.quaternion[0];
-        imu_msg.orientation.y = data->imu_state.quaternion[1];
-        imu_msg.orientation.z = data->imu_state.quaternion[2];
-        imu_msg.orientation.w = data->imu_state.quaternion[3];
+        imu_msg.orientation.w = data->imu_state.quaternion[0];
+        imu_msg.orientation.x = data->imu_state.quaternion[1];
+        imu_msg.orientation.y = data->imu_state.quaternion[2];
+        imu_msg.orientation.z = data->imu_state.quaternion[3];
 
         imu_msg.angular_velocity.x = data->imu_state.gyroscope[0];
         imu_msg.angular_velocity.y = data->imu_state.gyroscope[1];
@@ -36,6 +36,8 @@ private:
         imu_msg.linear_acceleration.z = data->imu_state.accelerometer[2];
 
         imu_pub_->publish(imu_msg);
+
+        RCLCPP_INFO(this->get_logger(), "IMU message published!");
     }
 
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
