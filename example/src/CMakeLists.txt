@@ -37,6 +37,7 @@ find_package(std_msgs REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 
 add_executable(low_level_ctrl src/low_level_ctrl.cpp src/common/motor_crc.cpp)
+add_executable(crc_calculator src/crc_calculator.cpp src/common/motor_crc.cpp)
 add_executable(read_low_state src/read_low_state.cpp)
 add_executable(read_motion_state src/read_motion_state.cpp)
 add_executable(read_wireless_controller src/read_wireless_controller.cpp)
@@ -44,6 +45,7 @@ add_executable(read_wireless_controller src/read_wireless_controller.cpp)
 add_executable(sport_mode_ctrl src/sport_mode_ctrl.cpp src/common/ros2_sport_client.cpp)
 
 ament_target_dependencies(low_level_ctrl ${DEPENDENCY_LIST})
+ament_target_dependencies(crc_calculator ${DEPENDENCY_LIST})
 ament_target_dependencies(read_low_state ${DEPENDENCY_LIST})
 ament_target_dependencies(read_motion_state ${DEPENDENCY_LIST})
 ament_target_dependencies(read_wireless_controller ${DEPENDENCY_LIST})
@@ -53,11 +55,12 @@ ament_target_dependencies(sport_mode_ctrl ${DEPENDENCY_LIST})
 
 install(TARGETS 
         low_level_ctrl
+        crc_calculator
         read_low_state
         read_motion_state
         read_wireless_controller
         sport_mode_ctrl
-        DESTINATION)
+        DESTINATION lib/${PROJECT_NAME})
 
 
 if(BUILD_TESTING)
