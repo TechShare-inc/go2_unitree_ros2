@@ -25,17 +25,39 @@ private:
     void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr cmd_vel_msg)
     {
         // 受け取った/cmd_velメッセージを出力
-        RCLCPP_INFO(this->get_logger(), "Received cmd_vel: LinearX=%f, LinearY=%f, AngularZ=%f",
-                    cmd_vel_msg->linear.x, cmd_vel_msg->linear.y, cmd_vel_msg->angular.z);
+        RCLCPP_INFO(this->get_logger(), 
+                    "Received cmd_vel: LinearX=%f, LinearY=%f, LinearZ=%f, AngularZ=%f",
+                    cmd_vel_msg->linear.x, 
+                    cmd_vel_msg->linear.y, 
+                    cmd_vel_msg->linear.z,
+                    cmd_vel_msg->angular.z);
 
-        // /cmd_velメッセージをUnitreeロボットの指令値の形式に変換
-        unitree_api::msg::Request req;
-        sport_client_.Move(req, cmd_vel_msg->linear.x, cmd_vel_msg->linear.y, cmd_vel_msg->angular.z);
+        // linear.z が絶対値 0.1 以上のときに、StandUpもしくはStandDOwn
+        if (std::abs(cmd_vel_msg->linear.z) >= 0.1) {
+            if (cmd_vel_msg->linear.z > 0.0) {
+                unitree_api::msg::Request req;
+                sport_client_.StandUp(req);
+                request_publisher_->publish(req);
 
-        // リクエストを送信
-        request_publisher_->publish(req);
-        // RCLCPP_INFO(this->get_logger(), "Published Request: LinearX=%f, LinearY=%f, AngularZ=%f",
-        //             cmd_vel_msg->linear.x, cmd_vel_msg->linear.y, cmd_vel_msg->angular.z);
+                // 3秒待つ
+                std::this_thread::sleep_for(std::chrono::seconds(3));
+
+                sport_client_.BalanceStand(req);
+                request_publisher_->publish(req);
+            } else {
+                unitree_api::msg::Request req;
+                sport_client_.StandDown(req);
+                request_publisher_->publish(req);
+            }
+        }
+        else{
+            // /cmd_velメッセージをUnitreeロボットの指令値の形式に変換
+            unitree_api::msg::Request req;
+            sport_client_.Move(req, cmd_vel_msg->linear.x, cmd_vel_msg->linear.y, cmd_vel_msg->angular.z);
+
+            // リクエストを送信
+            request_publisher_->publish(req);
+        }
     }
 
     // 購読者
